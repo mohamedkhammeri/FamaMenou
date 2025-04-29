@@ -30,8 +30,16 @@ public class TokenProvider {
 
     public TokenProvider(@Value("${jwt.secret}") String secret) {
         byte[] keyBytes = Decoders.BASE64.decode(secret);
+
+        // Check key length here manually
+        if (keyBytes.length * 8 < 512) { // convert bytes to bits
+            throw new IllegalArgumentException("The JWT secret key is too weak for HS512. It must be at least 512 bits (64 bytes).");
+        }
+
         this.key = Keys.hmacShaKeyFor(keyBytes);
-        this.jwtParser = Jwts.parserBuilder().setSigningKey(key).build();
+        this.jwtParser = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build();
     }
 
     public String createToken(Authentication authentication, boolean rememberMe) {
@@ -40,12 +48,9 @@ public class TokenProvider {
                 .collect(Collectors.joining(","));
 
         long now = System.currentTimeMillis();
-        Date validity;
-        if (rememberMe) {
-            validity = new Date(now + 864000000); // 10 days
-        } else {
-            validity = new Date(now + 3600000); // 1 hour
-        }
+        Date validity = rememberMe
+                ? new Date(now + 864000000L) // 10 days
+                : new Date(now + 3600000L);  // 1 hour
 
         return Jwts.builder()
                 .setSubject(authentication.getName())
@@ -60,6 +65,7 @@ public class TokenProvider {
 
         Collection<? extends GrantedAuthority> authorities = Arrays
                 .stream(claims.get(AUTHORITIES_KEY).toString().split(","))
+                .filter(auth -> !auth.trim().isEmpty())
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
 
@@ -74,7 +80,7 @@ public class TokenProvider {
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             log.info("Invalid JWT token: {}", e.getMessage());
+            return false;
         }
-        return false;
     }
 }

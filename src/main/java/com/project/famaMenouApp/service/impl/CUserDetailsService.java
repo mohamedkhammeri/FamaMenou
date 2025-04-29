@@ -3,12 +3,12 @@ package com.project.famaMenouApp.service.impl;
 import com.project.famaMenouApp.exception.UserNotActivatedException;
 import com.project.famaMenouApp.model.entity.User;
 import com.project.famaMenouApp.repository.UserRepository;
-import com.project.famaMenouApp.service.interfaces.IUserDetailsService;
 import jakarta.transaction.Transactional;
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +17,12 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
-public class UserDetailsService implements IUserDetailsService {
+public class CUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final EmailValidator emailValidator = new EmailValidator();
 
-    public UserDetailsService(UserRepository userRepository) {
+    public CUserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
     @Override
