@@ -1,4 +1,4 @@
-package com.project.famaMenouApp.service.impl;
+package com.project.famaMenouApp.service;
 
 import com.project.famaMenouApp.exception.UserNotActivatedException;
 import com.project.famaMenouApp.model.entity.User;
@@ -35,7 +35,7 @@ public class CUserDetailsService implements UserDetailsService {
         }
 
         String lowercaseLogin = login.toLowerCase(Locale.ENGLISH);
-        return userRepository.findOneByLogin(lowercaseLogin)
+        return userRepository.findOneByLoginIgnoreCase(lowercaseLogin)
                 .map(this::createSpringSecurityUser)
                 .orElseThrow(() -> new UsernameNotFoundException("User " + lowercaseLogin + " was not found"));
     }

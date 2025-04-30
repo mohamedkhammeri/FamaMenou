@@ -2,7 +2,7 @@ package com.project.famaMenouApp.security;
 
 import com.project.famaMenouApp.security.jwt.JWTConfigurer;
 import com.project.famaMenouApp.security.jwt.TokenProvider;
-import com.project.famaMenouApp.service.impl.CUserDetailsService;
+import com.project.famaMenouApp.service.CUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

@@ -1,4 +1,4 @@
-package com.project.famaMenouApp.service.impl;
+package com.project.famaMenouApp.service;
 
 import com.project.famaMenouApp.model.entity.Authority;
 import com.project.famaMenouApp.model.entity.User;

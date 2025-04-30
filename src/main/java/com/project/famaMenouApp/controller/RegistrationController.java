@@ -3,7 +3,7 @@ package com.project.famaMenouApp.controller;
 import com.project.famaMenouApp.model.dto.RegisterVM;
 import com.project.famaMenouApp.model.entity.User;
 import com.project.famaMenouApp.repository.UserRepository;
-import com.project.famaMenouApp.service.impl.UserService;
+import com.project.famaMenouApp.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,7 +32,7 @@ public class RegistrationController {
     @PostMapping("/register")
     public ResponseEntity<String> register(@Valid @RequestBody RegisterVM registerVM) {
         // Check if login (username) already exists
-        if (userRepository.findOneByLogin(registerVM.getUsername()).isPresent()) {
+        if (userRepository.findOneByLoginIgnoreCase(registerVM.getUsername()).isPresent()) {
             return new ResponseEntity<>("Username already exists", HttpStatus.BAD_REQUEST);
         }
 
