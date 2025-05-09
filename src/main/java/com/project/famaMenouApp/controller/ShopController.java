@@ -5,6 +5,7 @@ import com.project.famaMenouApp.model.entity.Shop;
 import com.project.famaMenouApp.model.entity.User;
 import com.project.famaMenouApp.repository.UserRepository;
 import com.project.famaMenouApp.service.ShopService;
+import com.project.famaMenouApp.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,6 +23,8 @@ public class ShopController {
 
     private final ShopService shopService;
     private final UserRepository userRepository;
+    private final UserService userService;
+
 
     @GetMapping
     public ResponseEntity<List<Shop>> getAllShops() {
@@ -36,8 +39,8 @@ public class ShopController {
     @GetMapping("/my-shops")
     public ResponseEntity<List<Shop>> getShopsByOwner(
             @AuthenticationPrincipal UserDetails userDetails) {
-        Long ownerId = Long.parseLong(userDetails.getUsername());
-        return ResponseEntity.ok(shopService.getShopsByOwner(ownerId));
+        User user=  userService.getUserByLogin(userDetails.getUsername());
+        return ResponseEntity.ok(shopService.getShopsByOwner(user.getId()));
     }
 
     @GetMapping("/{id}")

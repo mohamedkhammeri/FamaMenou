@@ -1,32 +1,69 @@
 package com.project.famaMenouApp.service;
 
 import com.project.famaMenouApp.exception.EntityNotFoundException;
-import com.project.famaMenouApp.model.entity.Product;
-import com.project.famaMenouApp.model.entity.Shop;
+import com.project.famaMenouApp.model.dto.PartialUpdateProductDTO;
+import com.project.famaMenouApp.model.dto.ProductRequest;
+import com.project.famaMenouApp.model.entity.*;
 import com.project.famaMenouApp.repository.ProductRepository;
 import com.project.famaMenouApp.repository.ShopRepository;
-import lombok.RequiredArgsConstructor;
+import com.project.famaMenouApp.repository.ProductCategoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final ProductCategoryRepository productCategoryRepository;
     private final ShopRepository shopRepository;
+    private final ProductCategoryRepository categoryRepository;
+    private final UserService userService;
 
-    // Basic CRUD operations
+    public ProductService(ProductRepository productRepository, ProductCategoryRepository productCategoryRepository, ShopRepository shopRepository, ProductCategoryRepository categoryRepository, UserService userService) {
+        this.productRepository = productRepository;
+        this.productCategoryRepository = productCategoryRepository;
+        this.shopRepository = shopRepository;
+        this.categoryRepository = categoryRepository;
+        this.userService = userService;
+    }
+// Basic CRUD operations
 
     @Transactional
-    public Product createProduct(Product product, Long shopId) {
+    public Product createProduct(ProductRequest productRequest , Long shopId, Long categoryId) {
         Shop shop = shopRepository.findById(shopId)
                 .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
-        product.setShop(shop);
-        return productRepository.save(product);
+        Optional<User> user=userService.getUserWithAuthorities();
+
+        if (user.isPresent()) {
+            Product product = new Product();
+            product.setShop(shop);
+            product.setName(productRequest.getName());
+            product.setDescription(productRequest.getDescription());
+            product.setPrice(productRequest.getPrice());
+            product.setOwner(user.get());
+            if (categoryId != null) {
+                ProductCategory category = productCategoryRepository.findById(categoryId)
+                        .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+                product.setCategory(category);
+            }
+
+            // Create initial price history entry
+        PriceHistory initialPrice = new PriceHistory();
+        initialPrice.setPrice(product.getPrice());
+        initialPrice.setRecordedAt(LocalDateTime.now());
+        initialPrice.setProduct(product);
+        product.getPriceHistory().add(initialPrice);
+        Product result= productRepository.save(product);
+
+        return result;
+        }
+        else {
+            throw new SecurityException("Unauthorized access");
+        }
     }
 
     public Product getProductById(Long productId) {
@@ -38,17 +75,34 @@ public class ProductService {
         return productRepository.findAll();
     }
 
+
     @Transactional
-    public Product updateProduct(Long productId, Product productDetails) {
-        Product existingProduct = getProductById(productId);
-        existingProduct.setName(productDetails.getName());
-        existingProduct.setDescription(productDetails.getDescription());
-        existingProduct.setPrice(productDetails.getPrice());
-        existingProduct.setImageUrl(productDetails.getImageUrl());
-        existingProduct.setActive(productDetails.isActive());
-        existingProduct.setUpdatedAt(LocalDateTime.now());
-        return productRepository.save(existingProduct);
+    public Product applyPartialUpdate(Long productId, PartialUpdateProductDTO dto) {
+        Long ownerId = userService.getUserWithAuthorities()
+                .orElseThrow(() -> new SecurityException("Unauthorized access"))
+                .getId();
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product with ID " + productId + " not found"));
+
+        if (!product.getOwner().getId().equals(ownerId)) {
+            throw new SecurityException("You are not authorized to update this product");
+        }
+
+        // Apply partial updates
+        Optional.ofNullable(dto.getName()).ifPresent(product::setName);
+        Optional.ofNullable(dto.getDescription()).ifPresent(product::setDescription);
+        Optional.ofNullable(dto.getPrice()).ifPresent(product::setPrice);
+        Optional.ofNullable(dto.getImageUrl()).ifPresent(product::setImageUrl);
+
+        if (dto.getCategoryId() != null) {
+            ProductCategory category = categoryRepository.findById(dto.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Category with ID " + dto.getCategoryId() + " not found"));
+            product.setCategory(category);
+        }
+
+        return productRepository.save(product);
     }
+
 
     @Transactional
     public void deleteProduct(Long productId) {

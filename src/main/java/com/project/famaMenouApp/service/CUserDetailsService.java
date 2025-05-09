@@ -1,6 +1,7 @@
 package com.project.famaMenouApp.service;
 
 import com.project.famaMenouApp.exception.UserNotActivatedException;
+import com.project.famaMenouApp.model.dto.UserDTO;
 import com.project.famaMenouApp.model.entity.User;
 import com.project.famaMenouApp.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,30 +27,42 @@ public class CUserDetailsService implements UserDetailsService {
     public CUserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
+
     @Override
     @Transactional
     public UserDetails loadUserByUsername(final String login) throws UsernameNotFoundException {
-        if (emailValidator.isValid(login, null)) {
-            return userRepository.findOneByEmailIgnoreCase(login)
-                    .map(this::createSpringSecurityUser)
-                    .orElseThrow(() -> new UsernameNotFoundException("User with email " + login + " was not found"));
-        }
+        User user = findUserByLoginOrEmail(login)
+                .orElseThrow(() -> new UsernameNotFoundException("User " + login + " was not found"));
 
-        String lowercaseLogin = login.toLowerCase(Locale.ENGLISH);
-        return userRepository.findOneByLoginIgnoreCase(lowercaseLogin)
-                .map(this::createSpringSecurityUser)
-                .orElseThrow(() -> new UsernameNotFoundException("User " + lowercaseLogin + " was not found"));
+        validateUserActivation(user);
+
+        return createSpringSecurityUser(user);
     }
 
-    private org.springframework.security.core.userdetails.User createSpringSecurityUser(User user) {
+    @Transactional
+    public UserDTO loadUserDTOByUsername(String login) {
+        User user = findUserByLoginOrEmail(login)
+                .orElseThrow(() -> new UsernameNotFoundException("User " + login + " was not found"));
+        return UserDTO.fromEntity(user);
+    }
+
+    private Optional<User> findUserByLoginOrEmail(String login) {
+        if (emailValidator.isValid(login, null)) {
+            return userRepository.findOneByEmailIgnoreCase(login);
+        }
+        return userRepository.findOneByLoginIgnoreCase(login.toLowerCase(Locale.ENGLISH));
+    }
+
+    private void validateUserActivation(User user) {
         if (!user.isActivated()) {
             throw new UserNotActivatedException("User " + user.getLogin() + " was not activated");
         }
-
         if (!user.isPhoneActivated() && user.getPhoneNumber() != null) {
             throw new UserNotActivatedException("User " + user.getLogin() + " phone number not verified");
         }
+    }
 
+    private org.springframework.security.core.userdetails.User createSpringSecurityUser(User user) {
         List<GrantedAuthority> grantedAuthorities = user.getAuthorities().stream()
                 .map(authority -> new SimpleGrantedAuthority(authority.getName()))
                 .collect(Collectors.toList());

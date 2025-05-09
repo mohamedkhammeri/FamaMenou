@@ -1,5 +1,8 @@
 package com.project.famaMenouApp.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -41,12 +44,11 @@ public class Shop {
 
     @Column(name = "image_url")
     private String imageUrl;
-
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
     private User owner;
-
-    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
+    @JsonIgnoreProperties({"products", "shop"})
+    @OneToMany(mappedBy = "shop")
     private List<Product> products = new ArrayList<>();
 }

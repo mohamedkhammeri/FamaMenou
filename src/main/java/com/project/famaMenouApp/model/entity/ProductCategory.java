@@ -1,5 +1,8 @@
 package com.project.famaMenouApp.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.ArrayList;
@@ -25,7 +28,7 @@ public class ProductCategory {
 
     @Column(name = "image_url")
     private String imageUrl;
-
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties({"products", "category"})
+    @OneToMany(mappedBy = "category")
     private List<Product> products = new ArrayList<>();
 }

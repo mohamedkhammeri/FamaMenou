@@ -1,19 +1,14 @@
 package com.project.famaMenouApp.model.dto;
 
-import com.project.famaMenouApp.model.entity.Authority;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.HashSet;
-import java.util.Set;
-
 @Setter
 @Getter
 public class RegisterVM {
-
     @NotBlank(message = "Username is required")
     @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
     private String username;
@@ -26,7 +21,12 @@ public class RegisterVM {
     @Email(message = "Email must be valid")
     private String email;
 
-    private Set<Authority> authorities = new HashSet<>();
+    @Size(max = 50)
+    private String firstName;
 
+    @Size(max = 50)
+    private String lastName;
 
+    private boolean acceptTerms;
+    private boolean acceptPromotions;
 }

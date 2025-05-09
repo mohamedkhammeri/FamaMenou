@@ -5,6 +5,7 @@ import com.project.famaMenouApp.exception.DuplicateEntityException;
 import com.project.famaMenouApp.model.entity.Shop;
 import com.project.famaMenouApp.repository.ShopRepository;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,17 +55,32 @@ public class ShopService {
     @Transactional
     public Shop updateShop(Long id, Shop shopDetails) {
         Shop shop = getShopById(id);
-        shop.setName(shopDetails.getName());
-        shop.setAddress(shopDetails.getAddress());
-        shop.setPhone(shopDetails.getPhone());
-        shop.setLatitude(shopDetails.getLatitude());
-        shop.setLongitude(shopDetails.getLongitude());
-        shop.setPremium(shopDetails.isPremium());
-        shop.setSecretDiscountCode(shopDetails.getSecretDiscountCode());
-        shop.setImageUrl(shopDetails.getImageUrl());
+
+        if (shopDetails.getName() != null) {
+            shop.setName(shopDetails.getName());
+        }
+        if (shopDetails.getAddress() != null) {
+            shop.setAddress(shopDetails.getAddress());
+        }
+        if (shopDetails.getPhone() != null) {
+            shop.setPhone(shopDetails.getPhone());
+        }
+        if (shopDetails.getLatitude() != null) {
+            shop.setLatitude(shopDetails.getLatitude());
+        }
+        if (shopDetails.getLongitude() != null) {
+            shop.setLongitude(shopDetails.getLongitude());
+        }
+
+        if (shopDetails.getSecretDiscountCode() != null) {
+            shop.setSecretDiscountCode(shopDetails.getSecretDiscountCode());
+        }
+        if (shopDetails.getImageUrl() != null) {
+            shop.setImageUrl(shopDetails.getImageUrl());
+        }
+
         return shopRepository.save(shop);
     }
-
     @Transactional
     public Shop updateShopByOwner(Long id, Long ownerId, Shop shopDetails) {
         Shop shop = getShopByIdAndOwner(id, ownerId);
